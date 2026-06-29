@@ -1,11 +1,4 @@
-"""
-run.py
-
-This is how you actually TALK to Buddy in V1 — just in your terminal, typing text.
-No voice, no web page yet — exactly matches the "bare-bones interface" we scoped for V1.
-
-Run it with:  python run.py
-"""
+import time
 
 from modules_guided.conflict_resolution import CONFLICT_RESOLUTION_MODULE
 from engine_guided.dialogue_engine import DialogueEngine
@@ -19,7 +12,7 @@ def run():
     if has_completed_module(learner_name, CONFLICT_RESOLUTION_MODULE["title"]):
         print(f"\n🤖 Buddy: Hi {learner_name}! You've already done this lesson before — let's do it again for fun!")
 
-    engine = DialogueEngine(CONFLICT_RESOLUTION_MODULE)
+    engine = DialogueEngine(CONFLICT_RESOLUTION_MODULE, learner_name=learner_name)
 
     print("=" * 50)
     print(f"Starting module: {CONFLICT_RESOLUTION_MODULE['title']}")
@@ -28,13 +21,20 @@ def run():
     while True:
         node = engine.current_node()
 
-        print(f"\n🤖 Buddy: {node['text']}")
+        print(f"\n🤖 Buddy: {engine.get_buddy_line()}")
 
         if node.get("next") is None and node["type"] != "decision":
             print("\n--- Session complete! ---")
             break
 
         if node["type"] in ("story", "reflection"):
+            # Auto-advance nodes are pure reactions that don't ask anything —
+            # genuinely skip ahead with a brief timed pause, no input wait.
+            if node["type"] == "story" and node.get("auto_advance"):
+                time.sleep(10)  # real pause, not a disguised input() wait
+                engine.submit_response("")
+                continue
+
             user_input = input("(press Enter to continue, or type a reflection answer) > ")
 
             # --- Safety screening happens on EVERY input, before anything else ---
@@ -60,6 +60,14 @@ def run():
 
             result = engine.submit_response(user_text)
 
+            # Light echo-back: reflect the child's own words before the
+            # canned reaction plays, so it feels like Buddy heard THEM
+            # specifically, not just which button they pressed. This is
+            # purely cosmetic — it doesn't change which branch was taken,
+            # and never generates new text, just reflects what was typed.
+            if result["status"] == "advanced" and user_text.strip():
+                print(f'\n🤖 Buddy: Ooh, "{user_text.strip()}" — got it!')
+
             if result["status"] == "no_match":
                 print(f"\n🤖 Buddy: {result['message']}")
             elif result["status"] == "fallback_advanced":
@@ -83,4 +91,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-

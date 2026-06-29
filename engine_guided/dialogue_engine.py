@@ -18,11 +18,12 @@ MAX_RETRIES = 2  # how many times we re-prompt before giving up and moving on
 
 
 class DialogueEngine:
-    def __init__(self, module: dict):
+    def __init__(self, module: dict, learner_name: str = "friend"):
         self.module = module
         self.nodes = module["nodes"]
         self.current_node_id = module["start_node"]
         self.retry_count = 0
+        self.learner_name = learner_name
         self.history = []  # log of everything that happened, for the session summary later
 
     def current_node(self) -> dict:
@@ -33,8 +34,14 @@ class DialogueEngine:
         return node.get("next") is None and node["type"] != "decision"
 
     def get_buddy_line(self) -> str:
-        """What Buddy should say for the current node."""
-        return self.current_node()["text"]
+        """
+        What Buddy should say for the current node. Any "{name}" placeholder
+        in the node's text gets replaced with the real learner's name —
+        modules can opt into this just by writing {name} in their text,
+        nothing else needs to change for existing modules that don't use it.
+        """
+        text = self.current_node()["text"]
+        return text.replace("{name}", self.learner_name)
 
     def submit_response(self, user_text: str) -> dict:
         """

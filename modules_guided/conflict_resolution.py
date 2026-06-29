@@ -9,6 +9,11 @@ Structure of a node:
     "id": "...",              # unique name for this node (so other nodes can point to it)
     "type": "story" | "decision" | "reflection",   # what kind of beat this is
     "text": "...",            # what Buddy says
+    "auto_advance": True/False,  # for "story" nodes only: if True, the
+        # runner moves straight to the next node without pausing for
+        # input — use this for pure reactions that don't ask anything.
+        # Defaults to False (pause) if not set, so existing modules
+        # without this field still behave exactly as before.
     "options": [               # the valid things a child can respond with (only for "decision" nodes)
         {
             "label": "...",        # short label for this choice (shown as a button, or matched against speech)
@@ -19,6 +24,9 @@ Structure of a node:
     ],
     "next": "..."   # for "story" and "reflection" nodes: just go straight to this next node, no choice needed
 }
+
+NOTE: any "{name}" in a node's "text" gets automatically replaced with the
+real learner's name by the engine (see engine_guided/dialogue_engine.py).
 """
 
 CONFLICT_RESOLUTION_MODULE = {
@@ -30,14 +38,30 @@ CONFLICT_RESOLUTION_MODULE = {
         "intro": {
             "id": "intro",
             "type": "story",
-            "text": "Hi! I'm Buddy. Today let's talk about something that happens to everyone — sharing! Ready?",
+            "text": "Hi {name}! I'm your life skills companion! Today we are learning about sharing!",
+            "next": "teach_concept"
+        },
+
+        "teach_concept": {
+            "id": "teach_concept",
+            "type": "story",
+            "text": "So, sharing means letting a friend use something too, even if you really want it all to yourself. And taking turns means everyone gets a turn, one after another — nobody gets left out!",
+            "auto_advance": True,
+            "next": "teach_why"
+        },
+
+        "teach_why": {
+            "id": "teach_why",
+            "type": "story",
+            "text": "When we share and take turns, our friends feel happy, and they want to play with us again! Okay, now let's see this in action...",
+            "auto_advance": True,
             "next": "scenario"
         },
 
         "scenario": {
             "id": "scenario",
             "type": "decision",
-            "text": "You and your friend Maya are coloring. You really want the red crayon, but Maya is using it and won't give it to you. What do you do?",
+            "text": "Okay so — you're coloring with your friend Maya, and ooh, that RED crayon looks so good. But Maya's using it right now and won't hand it over. Uh oh! What do you do?",
             "options": [
                 {
                     "label": "Grab the crayon",
@@ -60,28 +84,31 @@ CONFLICT_RESOLUTION_MODULE = {
         "grab_response": {
             "id": "grab_response",
             "type": "story",
-            "text": "Hmm, if we grab things, Maya might feel upset, and she may not want to share with us next time. Let's see what else we could try.",
+            "text": "Ooh, yikes! 😬 If we grab, Maya might feel surprised and a little sad — and next time, she might not want to share her crayons with us. Let's try a different way!",
+            "auto_advance": True,
             "next": "scenario_retry"
         },
 
         "ask_response": {
             "id": "ask_response",
             "type": "story",
-            "text": "That's a great choice! Asking nicely and waiting for a turn helps everyone feel good, and Maya will probably want to share with you again.",
+            "text": "Yes!! 🌟 That's such a kind move. When we ask nicely and wait our turn, everyone feels good — and Maya will probably want to share with you again and again!",
+            "auto_advance": True,
             "next": "reflection"
         },
 
         "teacher_response": {
             "id": "teacher_response",
             "type": "story",
-            "text": "That can help sometimes! But first, it's often good to try talking to your friend yourself, like asking nicely. Let's try that.",
+            "text": "That's a good idea to keep in your back pocket! But first, let's see what happens if YOU try talking to Maya yourself — like a real crayon negotiator. Ready?",
+            "auto_advance": True,
             "next": "scenario_retry"
         },
 
         "scenario_retry": {
             "id": "scenario_retry",
             "type": "decision",
-            "text": "So, Maya still has the red crayon. What's a kind way to ask her for a turn?",
+            "text": "Okay, Maya's still got the crayon. What's a friendly way you could ask her for a turn?",
             "options": [
                 {
                     "label": "Ask Maya nicely and wait for a turn",
@@ -94,14 +121,15 @@ CONFLICT_RESOLUTION_MODULE = {
         "reflection": {
             "id": "reflection",
             "type": "reflection",
-            "text": "Great job today! What's one thing you learned about sharing that you could try with a friend this week?",
+            "text": "You did awesome today! 🎉 If a friend ever has something you really want, what's one thing you could try?",
             "next": "end"
         },
 
         "end": {
             "id": "end",
             "type": "story",
-            "text": "Thanks for talking with me today! See you next time, Buddy out!",
+            "text": "Thanks for hanging out and sharing with me today, {name}! 💛 You're getting really good at this — see you next time, friend!",
+            "auto_advance": True,
             "next": None
         }
     }

@@ -44,10 +44,24 @@ def _fuzzy_match(user_text: str, options: list) -> dict | None:
     Splits the kid's answer into words, and checks each word against every
     known matching phrase for a "close enough" match (handles small typos,
     missing/extra letters, etc.) — without needing an AI model at all.
+
+    Tuning notes (measured against real test cases, not guessed):
+    - cutoff=0.82: chosen because "wait" vs "what" scores exactly 0.75
+      (a false positive caught during testing — a confused kid's "what
+      to do" was being misread as "wait" / ask nicely) while real typos
+      score well above that — "techer"/"teacher" 0.92, "nicly"/"nicely"
+      0.91, "grb"/"grab" 0.86. 0.82 cleanly separates the two.
+    - FILLER_WORDS are excluded entirely, even from exact matching —
+      words like "it" or "to" appear in almost any sentence and shouldn't
+      count as evidence on their own when checked in isolation from the
+      rest of their original phrase (e.g. "it" from "take it").
     """
     words = user_text.lower().split()
     if not words:
         return None
+
+    FILLER_WORDS = {"it", "to", "an", "a", "the", "for"}
+    FUZZY_CUTOFF = 0.82
 
     best_match = None
     best_score = 0
@@ -57,9 +71,9 @@ def _fuzzy_match(user_text: str, options: list) -> dict | None:
         for phrase in option["matches"]:
             phrase_words = phrase.lower().split()
             for pw in phrase_words:
-                # difflib.get_close_matches does a fuzzy string comparison —
-                # cutoff=0.75 means "close enough" but not wildly different
-                if difflib.get_close_matches(pw, words, n=1, cutoff=0.75):
+                if pw in FILLER_WORDS:
+                    continue
+                if difflib.get_close_matches(pw, words, n=1, cutoff=FUZZY_CUTOFF):
                     score += 1
         if score > best_score:
             best_score = score
