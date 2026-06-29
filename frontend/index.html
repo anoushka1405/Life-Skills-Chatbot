@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ollie & Pals - Life Skills Club</title>
+
+<!-- Modern, friendly rounded font layers matching the layout visual exactly -->
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  /* Signature soft cream background with the precise fine dot-grid layout from Screenshot 2 */
+  background-color: #fdfbf7;
+  background-image: radial-gradient(#e8e5dd 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  color: #1e2538;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+h1, h2, h3, .logo-text, .badge, .card-title, .ask-link, .chat-view-title-row h1 {
+  font-family: 'Fredoka', sans-serif;
+}
+
+/* NAVBAR */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 8%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon-svg {
+  width: 44px;
+  height: 44px;
+  background: #11a3e3;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text h2 {
+  font-size: 20px;
+  color: #1e2538;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.logo-text h2 span {
+  color: #11a3e3;
+}
+.logo-text p {
+  font-size: 11px;
+  color: #8c93a6;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.age-badge {
+  background: white;
+  color: #2d364d;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid #edf0f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.age-badge span {
+  color: #fbbf24;
+}
+
+/* MAIN CONTENT CONTAINER */
+.page-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* HERO ROW Layout matching Screenshot 2 */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px auto 48px auto;
+  gap: 40px;
+}
+
+.hero-left {
+  flex: 1;
+  max-width: 580px;
+}
+
+.tag-badge {
+  border: 2px solid #fcd34d;
+  color: #b45309;
+  background: #fefcf2;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: 52px;
+  color: #1b223c;
+  line-height: 1.15;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.hero h1 span.name {
+  color: #11a3e3;
+  position: relative;
+}
+.hero h1 span.name::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 100%;
+  height: 4px;
+  background: #fcd34d;
+  border-radius: 2px;
+}
+
+.hero h1 span.highlight {
+  color: #f59e0b;
+}
+
+.hero p {
+  font-size: 19px;
+  color: #4b5563;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* THE PERFECT BRAND SVG OWL WITH GRAPHICS ELEMENTS */
+.hero-right {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.speech-bubble {
+  position: absolute;
+  top: 30px;
+  right: 250px;
+  background: white;
+  padding: 12px 20px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 20px;
+  border-width: 8px 8px 0;
+  border-style: solid;
+  border-color: white transparent;
+}
+
+.owl-circle-bg {
+  width: 290px;
+  height: 290px;
+  background: #eef9fe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* TOPICS BLOCK HEADER */
+.section-title-block {
+  margin-bottom: 24px;
+}
+.section-title-block h2 {
+  font-size: 34px;
+  color: #1b223c;
+  margin-bottom: 8px;
+}
+.section-title-block p {
+  font-size: 17px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* INTERACTIVE CARDS GRID - Matching Screenshot 3 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 54px;
+}
+
+.card {
+  background: white;
+  border-radius: 28px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1), box-shadow 0.25s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.03);
+}
+
+.card-top { position: relative; z-index: 2; }
+
+.icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 22px;
+  color: #1b223c;
+  margin-bottom: 6px;
+}
+.card-desc {
+  font-size: 15px;
+  color: #6b7280;
+  font-weight: 500;
+  max-width: 85%;
+  line-height: 1.4;
+}
+.ask-link {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Colors matching Screenshot 3 */
+.card.blue-card { border: 2px solid #d2eefb; }
+.card.blue-card .icon-wrap { background: #e6f6fe; color: #11a3e3; }
+.card.blue-card .ask-link { color: #11a3e3; }
+.card.blue-card::before { content: ''; position: absolute; bottom: -30px; right: -30px; width: 140px; height: 140px; background: #e6f6fe; border-radius: 50%; opacity: 0.75; }
+
+.card.red-card { border: 2px solid #fde2e4; }
+.card.red-card .icon-wrap { background: #fff1f2; color: #f43f5e; }
+.card.red-card .ask-link { color: #f43f5e; }
+.card.red-card::before { content: ''; position: absolute; bottom: -30px; right: -30px; width: 140px; height: 140px; background: #fff1f2; border-radius: 50%; opacity: 0.75; }
+
+.card.green-card { border: 2px solid #d1f5ea; }
+.card.green-card .icon-wrap { background: #e6faf4; color: #10b981; }
+.card.green-card .ask-link { color: #10b981; }
+.card.green-card::before { content: ''; position: absolute; bottom: -30px; right: -30px; width: 140px; height: 140px; background: #e6faf4; border-radius: 50%; opacity: 0.75; }
+
+.card.purple-card { border: 2px solid #e0e4fc; }
+.card.purple-card .icon-wrap { background: #eef0fe; color: #6366f1; }
+.card.purple-card .ask-link { color: #6366f1; }
+.card.purple-card::before { content: ''; position: absolute; bottom: -30px; right: -30px; width: 140px; height: 140px; background: #eef0fe; border-radius: 50%; opacity: 0.75; }
+
+/* EMBEDDED CONVERSATION ENGINE - Sits perfectly directly below cards */
+.chat-view-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-top: 10px;
+}
+.chat-view-title-row h1 {
+  font-size: 32px;
+  color: #1b223c;
+  font-weight: 700;
+}
+.new-chat-btn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.chat-window {
+  background: white;
+  border-radius: 32px;
+  border: 1px solid #edf0f5;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  height: 560px;
+  overflow: hidden;
+}
+
+.chat-window-header {
+  padding: 18px 28px;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mini-avatar-bubble {
+  width: 40px;
+  height: 40px;
+  background: #11a3e3;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.mini-avatar-bubble svg {
+  width: 26px;
+  height: 26px;
+}
+.online-dot {
+  width: 11px;
+  height: 11px;
+  background: #10b981;
+  border: 2px solid white;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+.header-meta h4 { font-size: 15px; color: #1b223c; font-weight: 700; }
+.header-meta p { font-size: 12px; color: #10b981; font-weight: 600; }
+
+.messages-area {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 85%;
+}
+.msg-row.user-row {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.msg-bubble {
+  padding: 16px 22px;
+  border-radius: 22px;
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 500;
+  white-space: pre-line;
+}
+.bot-row .msg-bubble {
+  background: white;
+  color: #1b223c;
+  border: 1px solid #f1f5f9;
+  border-bottom-left-radius: 4px;
+}
+.user-row .msg-bubble {
+  background: #11a3e3;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* Action pills block from Screenshot 1 */
+.suggestions-row {
+  padding: 0 28px 14px 28px;
+  background: white;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+}
+.suggest-pill {
+  background: #f0f4ff;
+  border: 1px solid #d2e0fb;
+  color: #3b4cb8;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.suggest-pill:hover { background: #e1ebff; }
+
+/* Input bar footer controls */
+.chat-footer-input-bar {
+  padding: 16px 28px 24px 28px;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.input-wrapper { flex: 1; }
+.chat-footer-input-bar input {
+  width: 100%;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  outline: none;
+  color: #1b223c;
+}
+.chat-footer-input-bar input:focus {
+  background: white;
+  border-color: #11a3e3;
+}
+.round-send-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.round-send-btn svg {
+  fill: #94a3b8;
+  transform: rotate(45deg) translate(-1px, 1px);
+}
+.round-send-btn.active-btn { background: #11a3e3; }
+.round-send-btn.active-btn svg { fill: white; }
+
+@media (max-width: 868px) {
+  .hero { flex-direction: column; text-align: center; }
+  .speech-bubble { display: none; }
+  .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo-container">
+    <div class="logo-icon-svg">
+      <!-- Mini SVG logo owl face match -->
+      <svg viewBox="0 0 100 100" width="30" height="30">
+        <circle cx="50" cy="54" r="38" fill="white"/>
+        <circle cx="34" cy="50" r="12" fill="#1b223c"/><circle cx="66" cy="50" r="12" fill="#1b223c"/>
+        <polygon points="50,56 42,66 58,66" fill="#f59e0b"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <h2>Ollie <span>& Pals</span></h2>
+      <p>Life Skills Club</p>
+    </div>
+  </div>
+  <div class="age-badge"><span>✦</span> For curious kids, ages 5–12</div>
+</nav>
+
+<div class="page-wrapper">
+  
+  <!-- HERO ROW BLOCK Layout (Screenshot 2) -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="tag-badge"><span>✦</span> YOUR WISE LITTLE FRIEND</div>
+      <h1>Hi there! I'm <span class="name">Ollie</span>.<br>Let's learn <span class="highlight">life skills</span> together!</h1>
+      <p>Big feelings, money smarts, kindness, safety and habits — I've got stories, tips and answers for every brave question you bring.</p>
+    </div>
+    <div class="hero-right">
+      <div class="speech-bubble">Hoot hoot! ✨</div>
+      <div class="owl-circle-bg">
+        <!-- Upgraded Clean Inline-SVG Vector Artwork of Ollie the Owl from Screenshot 2 -->
+        <svg id="ollie-vector-graphic" viewBox="0 0 240 240" width="230" height="230">
+          <defs>
+            <clipPath id="body-clip"><circle cx="120" cy="130" r="85" /></clipPath>
+          </defs>
+          <!-- Ears/Tufts -->
+          <polygon points="45,65 80,90 45,120" fill="#11a3e3" />
+          <polygon points="195,65 160,90 195,120" fill="#11a3e3" />
+          <!-- Main Body -->
+          <circle cx="120" cy="130" r="85" fill="#11a3e3" />
+          <!-- Belly Overlay Layer -->
+          <path d="M40,140 Q120,70 200,140 A85,85 0 0,1 40,140 Z" fill="#fffdf4" clip-path="url(#body-clip)" />
+          <!-- Big Cute Eyes (Screenshot 2) -->
+          <circle cx="85" cy="115" r="28" fill="white" />
+          <circle cx="155" cy="115" r="28" fill="white" />
+          <!-- Happy Closed Eye Arcs -->
+          <path d="M70,115 Q85,130 100,115" stroke="#1b223c" stroke-width="5" fill="none" stroke-linecap="round" />
+          <path d="M140,115 Q155,130 170,115" stroke="#1b223c" stroke-width="5" fill="none" stroke-linecap="round" />
+          <!-- Orange Rosy Cheeks -->
+          <circle cx="62" cy="136" r="10" fill="#ffaebc" opacity="0.8" />
+          <circle cx="178" cy="136" r="10" fill="#ffaebc" opacity="0.8" />
+          <!-- Triangle Beak -->
+          <polygon points="120,122 108,136 132,136" fill="#f59e0b" />
+          <!-- Little Feet -->
+          <circle cx="100" cy="214" r="7" fill="#f59e0b" />
+          <circle cx="140" cy="214" r="7" fill="#f59e0b" />
+          <!-- Graduation Cap Layer Asset -->
+          <path d="M80,45 L120,25 L160,45 L120,65 Z" fill="#2d364d" />
+          <rect x="114" y="52" width="12" height="15" fill="#2d364d" />
+          <path d="M150,45 L162,68" stroke="#fbbf24" stroke-width="3" fill="none" />
+          <circle cx="162" cy="70" r="4" fill="#fbbf24" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPICS MATRIX (Screenshot 3) -->
+  <div class="section-title-block">
+    <h2>Pick what you're curious about</h2>
+    <p>Tap a card and Ollie will start a chat right away — no wrong questions!</p>
+  </div>
+
+  <div class="grid">
+    <div class="card blue-card" onclick="focusAndQuery('Daily Habits')">
+      <div class="card-top">
+        <div class="icon-wrap">✦</div>
+        <div class="card-title">Daily Habits</div>
+        <div class="card-desc">Brushing, sleep, hygiene & a happy morning</div>
+      </div>
+      <div class="ask-link">Ask Ollie ➔</div>
+    </div>
+
+    <div class="card red-card" onclick="focusAndQuery('Feelings & Emotions')">
+      <div class="card-top">
+        <div class="icon-wrap">♥</div>
+        <div class="card-title">Feelings & Emotions</div>
+        <div class="card-desc">Big feelings made easy to understand</div>
+      </div>
+      <div class="ask-link">Ask Ollie ➔</div>
+    </div>
+
+    <div class="card green-card" onclick="focusAndQuery('Friends & Kindness')">
+      <div class="card-top">
+        <div class="icon-wrap">👥</div>
+        <div class="card-title">Friends & Kindness</div>
+        <div class="card-desc">Sharing, manners, and making new friends</div>
+      </div>
+      <div class="ask-link">Ask Ollie ➔</div>
+    </div>
+
+    <div class="card purple-card" onclick="focusAndQuery('Money Smarts')">
+      <div class="card-top">
+        <div class="icon-wrap">🐷</div>
+        <div class="card-title">Money Smarts</div>
+        <div class="card-desc">Saving, spending, and the magic of allowances</div>
+      </div>
+      <div class="ask-link">Ask Ollie ➔</div>
+    </div>
+  </div>
+
+  <!-- PERSISTENT LIVE EMBEDDED CHAT WINDOW (Below cards framework layout) -->
+  <div class="chat-view-title-row" id="chat-section-anchor">
+    <h1>Ask me anything, little explorer</h1>
+    <button class="new-chat-btn" onclick="clearConversation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>Clear chat</button>
+  </div>
+
+  <div class="chat-window">
+    <div class="chat-window-header">
+      <div class="mini-avatar-bubble">
+        <svg viewBox="0 0 240 240"><circle cx="120" cy="130" r="85" fill="white"/><circle cx="85" cy="115" r="20" fill="#1b223c"/><circle cx="155" cy="115" r="20" fill="#1b223c"/><polygon points="120,125 110,138 130,138" fill="#f59e0b"/></svg>
+        <div class="online-dot"></div>
+      </div>
+      <div class="header-meta">
+        <h4>Ollie the Owl</h4>
+        <p>● Ready to help</p>
+      </div>
+    </div>
+
+    <div id="messages-box" class="messages-area">
+      <!-- Chat history fills inside here natively -->
+    </div>
+
+    <!-- Suggested Actions from Screenshot 1 -->
+    <div class="suggestions-row">
+      <div class="suggest-pill" onclick="sendQuickPill('Tell me a quick story about being brave')">Tell me a quick story about being brave</div>
+      <div class="suggest-pill" onclick="sendQuickPill('How do I make new friends at school?')">How do I make new friends at school?</div>
+      <div class="suggest-pill" onclick="sendQuickPill('Why is sleep so important?')">Why is sleep so important?</div>
+    </div>
+
+    <div class="chat-footer-input-bar">
+      <div class="input-wrapper">
+        <input id="user-msg-input" placeholder="Type your question to Ollie..." oninput="evaluateInputState()" onkeydown="if(event.key === 'Enter') dispatchQuery()" />
+      </div>
+      <button id="send-btn-circle" class="round-send-btn" onclick="dispatchQuery()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const messagesBox = document.getElementById("messages-box");
+const userMsgInput = document.getElementById("user-msg-input");
+const sendBtnCircle = document.getElementById("send-btn-circle");
+
+// Seed primary conversation context initialization matching Screenshot 1
+async function initDefaultState() {
+  messagesBox.innerHTML = "";
+  try {
+    const res = await fetch("http://127.0.0.1:8000/start");
+    const data = await res.json();
+    appendMsgRow(data.reply, "bot");
+  } catch (e) {
+    appendMsgRow(
+      "Hoot! I'm ready to chat, but my local backend connector (Port 8000) is resting. Fire up your server terminal to enable my live intelligence! ⚡🦉",
+      "bot"
+    );
+  }
+}
+
+function clearConversation() {
+  initDefaultState();
+}
+
+function evaluateInputState() {
+  if (userMsgInput.value.trim().length > 0) {
+    sendBtnCircle.classList.add("active-btn");
+  } else {
+    sendBtnCircle.classList.remove("active-btn");
+  }
+}
+
+function sendQuickPill(text) {
+  userMsgInput.value = text;
+  dispatchQuery();
+}
+
+function focusAndQuery(topicKeyword) {
+  // Smoothly scroll down directly to the inline chat layout
+  document.getElementById("chat-section-anchor").scrollIntoView({ behavior: 'smooth' });
+  userMsgInput.value = `Tell me more about ${topicKeyword}!`;
+  evaluateInputState();
+  userMsgInput.focus();
+}
+
+async function dispatchQuery() {
+  const text = userMsgInput.value.trim();
+  if (!text) return;
+
+  appendMsgRow(text, "user");
+  userMsgInput.value = "";
+  evaluateInputState();
+
+  try {
+    const res = await fetch("http://127.0.0.1:8000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    appendMsgRow(data.reply, "bot");
+  } catch (e) {
+    // Elegant system network error simulator block
+    setTimeout(() => {
+      appendMsgRow("Hoot! I'm ready to talk habits and big world details, but my local backend connector (Port 8000) is resting. Fire up your server terminal to enable my live intelligence! ⚡🦉", "bot");
+    }, 500);
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function appendMsgRow(contentStr, role) {
+  const wrapper = document.createElement("div");
+  wrapper.className = `msg-row ${role}-row`;
+  const safeContent = escapeHtml(contentStr);
+
+  if (role === 'bot') {
+    wrapper.innerHTML = `
+      <div class="mini-avatar-bubble" style="width:34px; height:34px;">
+        <svg viewBox="0 0 240 240"><circle cx="120" cy="130" r="85" fill="white"/><circle cx="85" cy="115" r="20" fill="#1b223c"/><circle cx="155" cy="115" r="20" fill="#1b223c"/><polygon points="120,125 110,138 130,138" fill="#f59e0b"/></svg>
+      </div>
+      <div class="msg-bubble">${safeContent}</div>
+    `;
+  } else {
+    wrapper.innerHTML = `<div class="msg-bubble">${safeContent}</div>`;
+  }
+
+  messagesBox.appendChild(wrapper);
+  messagesBox.scrollTop = messagesBox.scrollHeight;
+}
+
+// Initial Run Launch setup
+initDefaultState();
+</script>
+
+</body>
+</html>

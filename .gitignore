@@ -1,0 +1,5 @@
+.env
+__pycache__/
+*.pyc
+session_logs.json
+flagged_input_log.json
