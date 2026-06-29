@@ -1,5 +1,10 @@
 from engine.llm_helper import generate_stage_response, generate_summary
-from engine.safety import is_concerning, log_flagged_input
+from engine.safety import (
+    is_concerning,
+    log_flagged_input
+)
+from engine.scenario_generator import get_random_scenario
+
 import random
 
 
@@ -11,24 +16,25 @@ class DialogueEngine:
         self.history = []
         self.stage = 0
 
+        # ✅ structured MONEY lesson flow
         self.stages = [
             "introduction",
-            "personal_experience",
-            "teach_concept",
+            "wants_vs_needs",
+            "saving",
+            "spending",
             "scenario",
-            "scenario_discussion",
             "reflection",
             "wrap_up"
         ]
 
-        # 🧠 personality
+        # personality traits
         self.personality = {
             "warmth": 0.7,
             "energy": 0.6,
             "formality": 0.2
         }
 
-        # 🧠 FIXED memory (no missing keys anymore)
+        # memory
         self.memory = {
             "user_mood": "neutral",
             "engagement_level": "medium",
@@ -36,27 +42,45 @@ class DialogueEngine:
         }
 
         self.soft_openers = [
-            "That’s a great thought 😊",
+            "That's a great thought 😊",
             "I like how you're thinking 💭",
-            "Let’s explore that together 🤝",
-            "Hmm interesting!"
+            "Let's explore that together 🤝",
+            "Hmm, interesting!"
         ]
 
+    # ----------------------------
+    # START SESSION
+    # ----------------------------
+    def start(self):
+
+        opening = self.module["opening_message"]
+
+        self.history.append({
+            "role": "Buddy",
+            "text": opening
+        })
+
+        return opening
+
+    # ----------------------------
+    # MEMORY UPDATE
+    # ----------------------------
     def update_memory(self, text):
 
         t = text.lower()
+        words = len(text.split())
 
         # mood tracking
-        if any(w in t for w in ["good", "nice", "fun", "happy"]):
+        if any(w in t for w in ["good", "happy", "great", "fun", "awesome"]):
             self.memory["user_mood"] = "positive"
 
-        elif any(w in t for w in ["confused", "don't know", "hard"]):
+        elif any(w in t for w in ["confused", "hard", "don't know", "sad"]):
             self.memory["user_mood"] = "confused"
 
-        # engagement tracking (FIX for your crash)
-        if len(text.split()) > 8:
+        # engagement tracking
+        if words > 8:
             self.memory["engagement_level"] = "high"
-        elif len(text.split()) < 3:
+        elif words < 3:
             self.memory["engagement_level"] = "low"
         else:
             self.memory["engagement_level"] = "medium"
@@ -65,53 +89,124 @@ class DialogueEngine:
         if any(w in t for w in ["yes", "ok", "sure"]):
             self.personality["warmth"] = min(1.0, self.personality["warmth"] + 0.05)
 
-        if len(text.split()) < 3:
+        if words < 3:
             self.personality["energy"] = max(0.4, self.personality["energy"] - 0.02)
 
-    def start(self):
+    # ----------------------------
+    # STAGE CONTROL (FIXED)
+    # ----------------------------
+    def advance_stage(self, user_text):
 
-        opening = self.module["opening_message"]
+        words = len(user_text.split())
 
-        self.history.append({"role": "Buddy", "text": opening})
+        # don't move if too short
+        if words < 2:
+            return
 
-        return opening
+        # don't rush confused child
+        if self.memory["user_mood"] == "confused":
+            return
 
+        # normal progression (clean + predictable)
+        self.stage += 1
+
+        # cap stage
+        self.stage = min(self.stage, len(self.stages) - 1)
+
+    # ----------------------------
+    # RESPONSE ENGINE
+    # ----------------------------
     def respond(self, user_text):
 
+        current_stage = self.stages[self.stage]
+
+        # ------------------------
+        # SAFETY CHECK
+        # ------------------------
         if is_concerning(user_text):
+
             log_flagged_input(
-                user_text,
+                user_text=user_text,
                 learner_name=getattr(self, "learner_name", "demo_child"),
-                stage=self.stages[min(self.stage, len(self.stages) - 1)]
-            )
-            return (
-                "Thank you for telling me that. "
-                "Please talk to a trusted adult 💙"
+                stage=current_stage,
+                source="keyword"
             )
 
+            return (
+                "Thank you for sharing that with me 💙\n"
+                "I'm really glad you told me. A trusted adult can help you best with this."
+            )
+
+        # ------------------------
+        # MEMORY UPDATE
+        # ------------------------
         self.update_memory(user_text)
 
-        self.history.append({"role": "Child", "text": user_text})
+        self.history.append({
+            "role": "Child",
+            "text": user_text
+        })
 
-        stage = self.stages[min(self.stage, len(self.stages) - 1)]
+        stage = self.stages[self.stage]
 
-        response = generate_stage_response(
-            module=self.module,
-            history=self.history,
-            user_message=user_text,
-            stage=stage,
-            opener=random.choice(self.soft_openers),
-            personality=self.personality,
-            memory=self.memory,
-            is_final_stage=(stage in ("reflection", "wrap_up"))
-        )
+        # ------------------------
+        # SCENARIO STAGE
+        # ------------------------
+        if stage == "scenario":
 
-        self.history.append({"role": "Buddy", "text": response})
+            scenario = get_random_scenario(
+                self.module.get("title", "")
+            )
 
-        self.stage += 1
+            response = (
+                random.choice(self.soft_openers)
+                + "\n\n"
+                + scenario
+            )
+
+        # ------------------------
+        # REFLECTION FIX (IMPORTANT)
+        # ------------------------
+        elif stage == "reflection":
+
+            response = (
+                "Let’s reflect on what we learned today 😊\n\n"
+                "1) What is the difference between a want and a need?\n"
+                "2) Why is saving money important?\n\n"
+                "Take your time and think!"
+            )
+
+        # ------------------------
+        # NORMAL STAGES
+        # ------------------------
+        else:
+
+            response = generate_stage_response(
+                module=self.module,
+                history=self.history,
+                user_message=user_text,
+                stage=stage,
+                opener=random.choice(self.soft_openers),
+                personality=self.personality,
+                memory=self.memory,
+                is_final_stage=(stage == "wrap_up")
+            )
+
+        self.history.append({
+            "role": "Buddy",
+            "text": response
+        })
+
+        # ------------------------
+        # ADVANCE FLOW
+        # ------------------------
+        self.advance_stage(user_text)
 
         return response
 
+    # ----------------------------
+    # SESSION END
+    # ----------------------------
     def session_finished(self):
         return self.stage >= len(self.stages)
 

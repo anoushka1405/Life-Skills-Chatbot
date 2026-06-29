@@ -66,25 +66,124 @@ def _generate_with_retry(prompt, model="gemini-2.5-flash", max_retries=3, fallba
             raise
 
 
-def generate_stage_response(module, history, user_message, stage, opener, personality, memory, is_final_stage=False):
+def generate_stage_response(
+    module,
+    history,
+    user_message,
+    stage,
+    opener,
+    personality,
+    memory,
+    is_final_stage=False
+):
 
     conversation = "\n".join(
         f"{t['role']}: {t['text']}" for t in history[-5:]
     )
 
+    # Stage-specific guidance
+    stage_instruction = ""
+
+    if stage == "introduction":
+        stage_instruction = """
+Introduce today's topic warmly.
+Ask about the child's own experiences.
+Keep it playful and welcoming.
+"""
+
+    elif stage == "personal_experience":
+        stage_instruction = """
+Encourage the child to share experiences.
+Validate their feelings and ideas.
+Ask one simple follow-up question.
+"""
+
+    elif stage == "teach_concept":
+
+        if module["title"].lower() == "money smarts":
+            stage_instruction = """
+Teach one simple money idea.
+
+Explain:
+- needs vs wants
+- saving money
+- thoughtful spending
+
+Use age-appropriate examples.
+
+Example:
+'Food is usually a need. A toy is usually a want.'
+"""
+
+        else:
+            stage_instruction = """
+Teach one simple idea related to today's lesson.
+Use examples children understand.
+"""
+
+    elif stage == "scenario_discussion":
+
+        if module["title"].lower() == "money smarts":
+            stage_instruction = """
+Discuss the money scenario.
+
+Help the child think through:
+- saving
+- spending
+- fairness
+- responsibility
+
+Do not say answers are wrong.
+Guide them gently.
+"""
+
+        else:
+            stage_instruction = """
+Discuss the scenario and encourage reasoning.
+"""
+
+    elif stage == "reflection":
+        stage_instruction = """
+Ask the child to reflect on today's lesson.
+
+Encourage them to think about:
+- one new thing they learned
+- one smart choice they could make
+- how they might use this idea in real life
+
+Keep responses warm and encouraging.
+"""
+
+    elif stage == "wrap_up":
+        stage_instruction = """
+Congratulate the child.
+
+Mention one positive quality they showed, such as:
+- thoughtful thinking
+- responsibility
+- kindness
+- careful decision making
+
+End with excitement for future learning.
+"""
+
     reflection_instruction = ""
+
     if is_final_stage:
         reflection_instruction = """
-This is the LAST exchange before the lesson ends. Before wrapping up, ask
-the child ONE simple reflection question that checks whether they actually
-understood the main idea of this lesson — e.g. "Why do you think that
-matters?" or "How would you use this with a friend?" Do not just end on
-an open question that goes unanswered — make this question the clear
-closing checkpoint of the lesson.
+This is the LAST exchange before the lesson ends.
+
+Ask ONE simple reflection question that checks understanding.
+
+Examples:
+- What is one thing you learned today?
+- How could you use this idea in real life?
+
+Keep it simple and child-friendly.
 """
 
     prompt = f"""
-You are Buddy, a friendly learning companion for kids.
+You are Buddy, a friendly learning companion for children aged 5-12.
 
 Lesson: {module['title']}
 Stage: {stage}
@@ -103,35 +202,36 @@ Engagement: {memory['engagement_level']}
 Conversation:
 {conversation}
 
-Latest message:
+Latest child message:
 {user_message}
 
+STAGE INSTRUCTIONS:
+{stage_instruction}
+
 RULES:
-- Max 3 sentences
-- Simple language
-- ONE question max
-- Friendly tone
-- No repetition
-- If the child's answer is vague, confused, says "I don't know", or
-  doesn't really engage with the question, do NOT just praise it and move
-  on. Gently explain the idea yourself in one simple sentence, then ask
-  an easier, more specific follow-up question to check understanding
-  before moving forward.
+- Maximum 3 sentences.
+- Use simple language.
+- Friendly and encouraging tone.
+- Ask at most ONE question.
+- Avoid repeating yourself.
+- Celebrate effort, not correctness.
+- If the child seems confused, explain simply and ask an easier question.
+- Speak directly to the child.
+
 {reflection_instruction}
 
-Return only response.
+Return ONLY Buddy's response.
 """
 
     response_text = _generate_with_retry(
         prompt,
         fallback_message=(
-            "Sorry, I'm thinking a little slowly right now! "
-            "Can you tell me that again in a moment?"
+            "I'm thinking a little slowly right now 😊 "
+            "Could you tell me that again?"
         )
     )
 
     return response_text
-
 
 def generate_summary(history, module):
 

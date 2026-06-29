@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from engine.dialogue_engine import DialogueEngine
-from modules.empathy_module import EMPATHY_MODULE
+from session_manager import get_engine, clear_session
 
 app = FastAPI()
 
@@ -14,10 +13,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-engine = DialogueEngine(EMPATHY_MODULE)
+
+class StartRequest(BaseModel):
+    session_id: str
 
 
 class ChatRequest(BaseModel):
+    session_id: str
     message: str
 
 
@@ -26,19 +28,35 @@ def home():
     return {"status": "Buddy running 🚀"}
 
 
-@app.get("/start")
-def start():
-    return {"reply": engine.start()}
+@app.post("/start")
+def start(req: StartRequest):
+
+    engine = get_engine(req.session_id)
+
+    return {
+        "reply": engine.start()
+    }
 
 
 @app.post("/chat")
 def chat(req: ChatRequest):
 
-    user_text = req.message
-    response = engine.respond(user_text)
+    engine = get_engine(req.session_id)
 
-    return {
+    response = engine.respond(req.message)
+
+    finished = engine.session_finished()
+
+    result = {
         "reply": response,
         "stage": engine.stage,
-        "warmth": engine.personality["warmth"]
+        "warmth": engine.personality["warmth"],
+        "finished": finished
     }
+
+    # attach summary if lesson finished
+    if finished:
+        result["summary"] = engine.end_session()
+        clear_session(req.session_id)
+
+    return result

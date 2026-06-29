@@ -1,0 +1,10 @@
+# --- Free-flow version (run.py, main.py) ---
+google-genai
+python-dotenv
+fastapi
+uvicorn
+ 
+# --- Safety screening: transformer-based semantic fallback ---
+transformers
+torch
+ 
