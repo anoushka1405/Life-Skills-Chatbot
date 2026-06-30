@@ -10,7 +10,7 @@ def run():
     learner_name = input("What's your name? ") or "demo_child"
 
     if has_completed_module(learner_name, CONFLICT_RESOLUTION_MODULE["title"]):
-        print(f"\n🤖 Buddy: Hi {learner_name}! You've already done this lesson before — let's do it again for fun!")
+        print(f"\n🤖 Buddy: Hi {learner_name}! You've already done this lesson before, let's do it again for fun!")
 
     engine = DialogueEngine(CONFLICT_RESOLUTION_MODULE, learner_name=learner_name)
 
@@ -31,7 +31,7 @@ def run():
             # Auto-advance nodes are pure reactions that don't ask anything —
             # genuinely skip ahead with a brief timed pause, no input wait.
             if node["type"] == "story" and node.get("auto_advance"):
-                time.sleep(10)  # real pause, not a disguised input() wait
+                time.sleep(7)  #pause
                 engine.submit_response("")
                 continue
 
@@ -41,9 +41,9 @@ def run():
             screen_result = screen_input(user_input)
             if screen_result["flagged"]:
                 log_flagged_input(learner_name, node["id"], user_input, screen_result["matched_terms"])
-                # Buddy's response stays calm and pre-written — it does NOT
+                # Buddy's response stays calm and pre-written, it does NOT
                 # try to engage with the concerning content itself.
-                print("\n🤖 Buddy: Thank you for telling me. That sounds important — let's make sure a grown-up you trust knows about this too.")
+                print("\n🤖 Buddy: That sounds important, let's make sure a grown-up you trust knows about this too.")
 
             engine.submit_response(user_input)
             continue
@@ -55,7 +55,7 @@ def run():
             screen_result = screen_input(user_text)
             if screen_result["flagged"]:
                 log_flagged_input(learner_name, node["id"], user_text, screen_result["matched_terms"])
-                print("\n🤖 Buddy: Thank you for telling me. That sounds important — let's make sure a grown-up you trust knows about this too.")
+                print("\n🤖 Buddy: That sounds important, let's make sure a grown-up you trust knows about this too.")
                 continue  # don't classify flagged input as a lesson answer — ask again
 
             result = engine.submit_response(user_text)

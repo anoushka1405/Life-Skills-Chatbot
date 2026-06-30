@@ -11,7 +11,7 @@ Structure of a node:
     "text": "...",            # what Buddy says
     "auto_advance": True/False,  # for "story" nodes only: if True, the
         # runner moves straight to the next node without pausing for
-        # input — use this for pure reactions that don't ask anything.
+        # input :  use this for pure reactions that don't ask anything.
         # Defaults to False (pause) if not set, so existing modules
         # without this field still behave exactly as before.
     "options": [               # the valid things a child can respond with (only for "decision" nodes)
@@ -24,9 +24,6 @@ Structure of a node:
     ],
     "next": "..."   # for "story" and "reflection" nodes: just go straight to this next node, no choice needed
 }
-
-NOTE: any "{name}" in a node's "text" gets automatically replaced with the
-real learner's name by the engine (see engine_guided/dialogue_engine.py).
 """
 
 CONFLICT_RESOLUTION_MODULE = {
@@ -39,6 +36,7 @@ CONFLICT_RESOLUTION_MODULE = {
             "id": "intro",
             "type": "story",
             "text": "Hi {name}! I'm your life skills companion! Today we are learning about sharing!",
+            "auto_advance": True,
             "next": "teach_concept"
         },
 
@@ -61,7 +59,7 @@ CONFLICT_RESOLUTION_MODULE = {
         "scenario": {
             "id": "scenario",
             "type": "decision",
-            "text": "Okay so — you're coloring with your friend Maya, and ooh, that RED crayon looks so good. But Maya's using it right now and won't hand it over. Uh oh! What do you do?",
+            "text": "Okay so, you're coloring with your friend Maya, and you want the red crayon, but Maya is using it right now too! Uh oh! What do you do?",
             "options": [
                 {
                     "label": "Grab the crayon",
@@ -94,7 +92,75 @@ CONFLICT_RESOLUTION_MODULE = {
             "type": "story",
             "text": "Yes!! 🌟 That's such a kind move. When we ask nicely and wait our turn, everyone feels good — and Maya will probably want to share with you again and again!",
             "auto_advance": True,
+            "next": "scenario_2_intro"
+        },
+
+        "scenario_2_intro": {
+            "id": "scenario_2_intro",
+            "type": "story",
+            "text": "Okay {name}, nice work! Let's try one more tricky moment, this time at recess...",
+            "auto_advance": True,
+            "next": "scenario_2"
+        },
+
+        "scenario_2": {
+            "id": "scenario_2",
+            "type": "decision",
+            "text": "There's only ONE swing on the playground, and you really want to swing, but your friend Priya is already on it, having a great time. What's the best thing to do?",
+            "options": [
+                {
+                    "label": "Ask if you can have a turn after her",
+                    "matches": ["ask", "my turn", "take turns", "after her", "wait", "next turn", "can i go next"],
+                    "next": "scenario_2_good"
+                },
+                {
+                    "label": "Say it's not fair and walk away upset",
+                    "matches": ["not fair", "walk away", "upset", "unfair", "leave"],
+                    "next": "scenario_2_walkaway"
+                },
+                {
+                    "label": "Try to find something else to play instead",
+                    "matches": ["something else", "different", "find another", "play something", "go play"],
+                    "next": "scenario_2_alternative"
+                }
+            ]
+        },
+
+        "scenario_2_good": {
+            "id": "scenario_2_good",
+            "type": "story",
+            "text": "Yes! 🛝 Asking for your turn next is such a great idea — Priya gets to finish her turn, and then it's your turn to swing. Everybody's happy!",
+            "auto_advance": True,
             "next": "reflection"
+        },
+
+        "scenario_2_walkaway": {
+            "id": "scenario_2_walkaway",
+            "type": "story",
+            "text": "Hmm, that's okay to feel — it IS a little disappointing to wait! But walking away upset means you might not get a turn at all. What if we asked for the next turn instead?",
+            "auto_advance": True,
+            "next": "scenario_2_retry"
+        },
+
+        "scenario_2_alternative": {
+            "id": "scenario_2_alternative",
+            "type": "story",
+            "text": "That's a totally fine choice too — playing something else is never wrong! But here's an idea: what if you asked Priya for the next turn, so you still get to swing later?",
+            "auto_advance": True,
+            "next": "scenario_2_retry"
+        },
+
+        "scenario_2_retry": {
+            "id": "scenario_2_retry",
+            "type": "decision",
+            "text": "So — what's a friendly way to ask Priya for the next turn on the swing?",
+            "options": [
+                {
+                    "label": "Ask if you can have a turn after her",
+                    "matches": ["ask", "my turn", "take turns", "after her", "wait", "next turn", "can i go next", "please"],
+                    "next": "scenario_2_good"
+                }
+            ]
         },
 
         "teacher_response": {
