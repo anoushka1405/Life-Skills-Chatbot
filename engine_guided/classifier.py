@@ -10,11 +10,6 @@ Two passes:
   Pass 2: fuzzy matching using Python's built-in difflib, which catches
           typos and near-misses (e.g. "techer" -> "teacher") without
           needing any AI model call.
-
-This is intentionally NOT calling any LLM. An AI-assisted fallback is a
-designed future upgrade (see mentor prep doc / tech stack), swappable in
-later without changing how this function is called from the rest of the
-engine — but it's not needed or used for this version.
 """
 
 import difflib
@@ -43,11 +38,11 @@ def _fuzzy_match(user_text: str, options: list) -> dict | None:
     Pass 2: word-by-word fuzzy matching to catch typos.
     Splits the kid's answer into words, and checks each word against every
     known matching phrase for a "close enough" match (handles small typos,
-    missing/extra letters, etc.) — without needing an AI model at all.
+    missing/extra letters, etc.)
 
-    Tuning notes (measured against real test cases, not guessed):
+    Tuning notes (measured against real test cases):
     - cutoff=0.82: chosen because "wait" vs "what" scores exactly 0.75
-      (a false positive caught during testing — a confused kid's "what
+      (a false positive caught during testing, a confused kid's "what
       to do" was being misread as "wait" / ask nicely) while real typos
       score well above that — "techer"/"teacher" 0.92, "nicly"/"nicely"
       0.91, "grb"/"grab" 0.86. 0.82 cleanly separates the two.

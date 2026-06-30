@@ -1,126 +1,225 @@
-"""
-engine/dialogue_engine.py
+from engine.llm_helper import generate_stage_response, generate_summary
+from engine.safety import (
+    is_concerning,
+    log_flagged_input
+)
+from engine.scenario_generator import get_random_scenario
 
-This is the brain that walks through a module, node by node.
-
-Job of this file:
-- Keep track of "where we are" in the conversation (current node, retry count)
-- Decide what Buddy says next
-- When the kid answers, ask the classifier what they meant
-- If matched: move to the next node
-- If not matched: gently re-prompt (up to a limit), then move forward anyway
-  so the conversation never gets stuck in a loop
-"""
-
-from engine_guided.classifier import classify_intent
-
-MAX_RETRIES = 2  # how many times we re-prompt before giving up and moving on
+import random
 
 
 class DialogueEngine:
-    def __init__(self, module: dict, learner_name: str = "friend"):
+
+    def __init__(self, module):
+
         self.module = module
-        self.nodes = module["nodes"]
-        self.current_node_id = module["start_node"]
-        self.retry_count = 0
-        self.learner_name = learner_name
-        self.history = []  # log of everything that happened, for the session summary later
+        self.history = []
+        self.stage = 0
+        self._wrap_up_done = False  # tracks whether we've actually responded
+            # to the final "wrap_up" stage yet — without this, the session
+            # could never genuinely end, since the stage index is capped at
+            # the last stage rather than incrementing past it.
 
-    def current_node(self) -> dict:
-        return self.nodes[self.current_node_id]
-
-    def is_finished(self) -> bool:
-        node = self.current_node()
-        return node.get("next") is None and node["type"] != "decision"
-
-    def get_buddy_line(self) -> str:
-        """
-        What Buddy should say for the current node. Any "{name}" placeholder
-        in the node's text gets replaced with the real learner's name —
-        modules can opt into this just by writing {name} in their text,
-        nothing else needs to change for existing modules that don't use it.
-        """
-        text = self.current_node()["text"]
-        return text.replace("{name}", self.learner_name)
-
-    def submit_response(self, user_text: str) -> dict:
-        """
-        Called when the kid responds to a 'decision' node.
-        Returns a dict describing what happened, so the caller (our CLI, for now)
-        knows what to print.
-        """
-        node = self.current_node()
-
-        if node["type"] != "decision":
-            # Story/reflection nodes don't need a real answer to branch on —
-            # we just log whatever was said (useful for reflection!) and move on.
-            self.history.append({"node": node["id"], "said": user_text})
-            self._advance(node.get("next"))
-            return {"status": "advanced"}
-
-        match = classify_intent(user_text, node["options"])
-
-        if match is not None:
-            self.history.append({
-                "node": node["id"],
-                "said": user_text,
-                "matched_option": match["label"]
-            })
-            self.retry_count = 0
-            self._advance(match["next"])
-            return {"status": "advanced"}
-
-        # No match — this is the "confirm and repeat" behavior
-        self.retry_count += 1
-        self.history.append({"node": node["id"], "said": user_text, "matched_option": None})
-
-        if self.retry_count > MAX_RETRIES:
-            # Give up gracefully — move to the first option's path so the
-            # session doesn't get stuck forever.
-            self.retry_count = 0
-            fallback_next = node["options"][0]["next"]
-            self._advance(fallback_next)
-            return {
-                "status": "fallback_advanced",
-                "message": "That's okay! Let's keep going together."
-            }
-
-        return {
-            "status": "no_match",
-            "message": "Hmm, I didn't quite catch that. Could you try saying it a different way?"
-        }
-
-    def _advance(self, next_node_id):
-        self.current_node_id = next_node_id
-
-    def generate_summary(self) -> dict:
-        """
-        Builds the end-of-session summary — what we'd show a teacher/parent.
-        Pulled straight from self.history, which we've been quietly building
-        this whole time as the conversation progressed.
-        """
-        decisions_made = [
-            h for h in self.history if h.get("matched_option") is not None
-        ]
-        # Only count it as a "struggle" if this history entry came from an
-        # actual decision node that failed to match — NOT story/reflection
-        # nodes, which never have a matched_option key at all and shouldn't
-        # be counted as a failed attempt.
-        times_struggled = sum(
-            1 for h in self.history
-            if "matched_option" in h and h["matched_option"] is None
-        )
-        reflection_entries = [
-            h["said"] for h in self.history
-            if self.nodes.get(h["node"], {}).get("type") == "reflection" and h["said"]
+        # ✅ structured MONEY lesson flow
+        self.stages = [
+            "introduction",
+            "wants_vs_needs",
+            "saving",
+            "spending",
+            "scenario",
+            "reflection",
+            "wrap_up"
         ]
 
-        return {
-            "module": self.module["title"],
-            "completed": self.is_finished(),
-            "choices_made": [
-                {"at": h["node"], "chose": h["matched_option"]} for h in decisions_made
-            ],
-            "times_needed_a_retry": times_struggled,
-            "reflection_answer": reflection_entries[0] if reflection_entries else None,
+        # personality traits
+        self.personality = {
+            "warmth": 0.7,
+            "energy": 0.6,
+            "formality": 0.2
         }
+
+        # memory
+        self.memory = {
+            "user_mood": "neutral",
+            "engagement_level": "medium",
+            "last_topic": None
+        }
+
+        self.soft_openers = [
+            "That's a great thought 😊",
+            "I like how you're thinking 💭",
+            "Let's explore that together 🤝",
+            "Hmm, interesting!"
+        ]
+
+    # ----------------------------
+    # START SESSION
+    # ----------------------------
+    def start(self):
+
+        opening = self.module["opening_message"]
+
+        self.history.append({
+            "role": "Buddy",
+            "text": opening
+        })
+
+        return opening
+
+    # ----------------------------
+    # MEMORY UPDATE
+    # ----------------------------
+    def update_memory(self, text):
+
+        t = text.lower()
+        words = len(text.split())
+
+        # mood tracking
+        if any(w in t for w in ["good", "happy", "great", "fun", "awesome"]):
+            self.memory["user_mood"] = "positive"
+
+        elif any(w in t for w in ["confused", "hard", "don't know", "sad"]):
+            self.memory["user_mood"] = "confused"
+
+        # engagement tracking
+        if words > 8:
+            self.memory["engagement_level"] = "high"
+        elif words < 3:
+            self.memory["engagement_level"] = "low"
+        else:
+            self.memory["engagement_level"] = "medium"
+
+        # personality adjustment
+        if any(w in t for w in ["yes", "ok", "sure"]):
+            self.personality["warmth"] = min(1.0, self.personality["warmth"] + 0.05)
+
+        if words < 3:
+            self.personality["energy"] = max(0.4, self.personality["energy"] - 0.02)
+
+    # ----------------------------
+    # STAGE CONTROL (FIXED)
+    # ----------------------------
+    def advance_stage(self, user_text):
+
+        words = len(user_text.split())
+
+        # don't move if too short
+        if words < 2:
+            return
+
+        # don't rush confused child
+        if self.memory["user_mood"] == "confused":
+            return
+
+        # normal progression (clean + predictable)
+        self.stage += 1
+
+        # cap stage
+        self.stage = min(self.stage, len(self.stages) - 1)
+
+    # ----------------------------
+    # RESPONSE ENGINE
+    # ----------------------------
+    def respond(self, user_text):
+
+        current_stage = self.stages[self.stage]
+
+        # ------------------------
+        # SAFETY CHECK
+        # ------------------------
+        if is_concerning(user_text):
+
+            log_flagged_input(
+                user_text=user_text,
+                learner_name=getattr(self, "learner_name", "demo_child"),
+                stage=current_stage,
+                source="keyword"
+            )
+
+            return (
+                "Thank you for sharing that with me 💙\n"
+                "I'm really glad you told me. A trusted adult can help you best with this."
+            )
+
+        # ------------------------
+        # MEMORY UPDATE
+        # ------------------------
+        self.update_memory(user_text)
+
+        self.history.append({
+            "role": "Child",
+            "text": user_text
+        })
+
+        stage = self.stages[self.stage]
+
+        # ------------------------
+        # SCENARIO STAGE
+        # ------------------------
+        if stage == "scenario":
+
+            scenario = get_random_scenario(
+                self.module.get("title", "")
+            )
+
+            response = (
+                random.choice(self.soft_openers)
+                + "\n\n"
+                + scenario
+            )
+
+        # ------------------------
+        # REFLECTION FIX (IMPORTANT)
+        # ------------------------
+        elif stage == "reflection":
+
+            response = (
+                "Let’s reflect on what we learned today 😊\n\n"
+                "1) What is the difference between a want and a need?\n"
+                "2) Why is saving money important?\n\n"
+                "Take your time and think!"
+            )
+
+        # ------------------------
+        # NORMAL STAGES
+        # ------------------------
+        else:
+
+            response = generate_stage_response(
+                module=self.module,
+                history=self.history,
+                user_message=user_text,
+                stage=stage,
+                opener=random.choice(self.soft_openers),
+                personality=self.personality,
+                memory=self.memory,
+                is_final_stage=(stage == "wrap_up")
+            )
+
+        self.history.append({
+            "role": "Buddy",
+            "text": response
+        })
+
+        # If we just responded WHILE at the final stage, the session has
+        # genuinely concluded — mark it so session_finished() can detect
+        # this correctly (the stage index alone can't tell us, since it's
+        # capped at the last stage rather than incrementing past it).
+        if stage == "wrap_up":
+            self._wrap_up_done = True
+
+        # ------------------------
+        # ADVANCE FLOW
+        # ------------------------
+        self.advance_stage(user_text)
+
+        return response
+
+    # ----------------------------
+    # SESSION END
+    # ----------------------------
+    def session_finished(self):
+        return self._wrap_up_done
+
+    def end_session(self):
+        return generate_summary(self.history, self.module)
